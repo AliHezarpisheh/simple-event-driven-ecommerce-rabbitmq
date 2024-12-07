@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "simple-event-driven-ecommerce-rabbitmq"
 version = "0.1.0"
-description = ""
+description = "A simple event-driven e-commerce application, implemented using rabbitmq(aio-pika), for learning purposes."
 authors = ["alihezarpisheh <alihezarpisheh@outlook.com>"]
 license = "MIT"
 readme = "README.md"
@@ -9,6 +9,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "3.13"
 aio-pika = "^9.5.3"
+coloredlogs = "^15.0.1"
+tomlkit = "^0.13.2"
 
 
 [tool.poetry.group.test.dependencies]
