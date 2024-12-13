@@ -12,6 +12,7 @@ python = "^3.13"
 aio-pika = "^9.5.3"
 coloredlogs = "^15.0.1"
 tomlkit = "^0.13.2"
+pydantic-settings = "^2.7.0"
 
 
 [tool.poetry.group.test.dependencies]
