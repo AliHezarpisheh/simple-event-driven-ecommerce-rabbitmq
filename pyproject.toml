@@ -5,9 +5,10 @@ description = "A simple event-driven e-commerce application, implemented using r
 authors = ["alihezarpisheh <alihezarpisheh@outlook.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "3.13"
+python = "^3.13"
 aio-pika = "^9.5.3"
 coloredlogs = "^15.0.1"
 tomlkit = "^0.13.2"
