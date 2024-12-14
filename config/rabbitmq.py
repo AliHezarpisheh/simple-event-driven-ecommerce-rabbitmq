@@ -56,6 +56,7 @@ class AsyncRabbitmqManager:
     async def declare_exchange(
         self,
         name: str,
+        *,
         exchange_type: ExchangeType = ExchangeType.DIRECT,
         durable: bool = True,
         auto_delete: bool = False,
@@ -90,9 +91,11 @@ class AsyncRabbitmqManager:
 
     async def declare_queue(
         self,
-        name: str,
+        name: str | None = None,
+        *,
         durable: bool = True,
         auto_delete: bool = False,
+        exclusive: bool = False,
         dead_letter_exchange: str | None = None,
     ) -> AbstractRobustQueue:
         """
@@ -102,13 +105,17 @@ class AsyncRabbitmqManager:
 
         Parameters
         ----------
-        name : str
-            The name of the queue to declare.
+        name : str, optional
+            The name of the queue to declare. If the name set to None, the server will
+            generate a random name for the queue. (default is None)
         durable : bool, optional
             Whether the queue should survive server restarts (default is True).
         auto_delete : bool, optional
             Whether the queue should be deleted when no consumers are connected
             (default is False).
+        exclusive: bool, optional
+            Wether the queues should exclusive to the created connection or not.
+            (default is False)
         dead_letter_exchange : str, optional
             The name of the dead letter exchange to use for the queue (default is None).
 
@@ -124,12 +131,17 @@ class AsyncRabbitmqManager:
             else {}
         )
         queue = await channel.declare_queue(
-            name=name, durable=durable, auto_delete=auto_delete, arguments=arguments
+            name=name,
+            durable=durable,
+            auto_delete=auto_delete,
+            exclusive=exclusive,
+            arguments=arguments,
         )
         return queue
 
     async def bind_queue(
         self,
+        *,
         exchange: AbstractRobustExchange,
         queue: AbstractRobustQueue,
         routing_key: str = "",
