@@ -46,11 +46,11 @@ class AsyncRabbitmqManager:
         AbstractRobustChannel
             The channel for interacting with RabbitMQ.
         """
-        if not self._connection:
-            connection = await self.get_connection()
+        connection = await self.get_connection()
 
         if not self._channel:
-            self._channel = connection.channel()
+            self._channel = await connection.channel()
+
         return self._channel
 
     async def declare_exchange(
