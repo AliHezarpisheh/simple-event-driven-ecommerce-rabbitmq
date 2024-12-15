@@ -45,3 +45,7 @@ class Order(BaseSchema):
             frozen=True,
         ),
     ]
+
+    def to_message(self) -> bytes:
+        """Convert the order to an acceptable format for the AMQP messages."""
+        return self.model_dump_json().encode("utf-8")
