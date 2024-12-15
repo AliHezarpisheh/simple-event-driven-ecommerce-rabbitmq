@@ -1,13 +1,12 @@
 """Module defines the schemas and datastructures that are related to orders."""
 
 import uuid
-from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator, Field
 
-from toolkit.schemas import BaseSchema
+from toolkit.schemas import BaseSchema, TimestampMixin
 
 ORDER_STATUS = Literal["created", "pending", "canceled", "failed"]
 
@@ -19,7 +18,7 @@ def is_decimal_positive(number: Decimal) -> Decimal:
     return number
 
 
-class Order(BaseSchema):
+class Order(BaseSchema, TimestampMixin):
     """Pydantic schema, modeling an Order in the system."""
 
     order_id: Annotated[
@@ -37,15 +36,3 @@ class Order(BaseSchema):
         AfterValidator(is_decimal_positive),
     ]
     status: Annotated[ORDER_STATUS, Field(description="The current state of the order")]
-    created_at: Annotated[
-        datetime,
-        Field(
-            description="The datetime that the order is created",
-            default_factory=lambda: datetime.now(timezone.utc),
-            frozen=True,
-        ),
-    ]
-
-    def to_message(self) -> bytes:
-        """Convert the order to an acceptable format for the AMQP messages."""
-        return self.model_dump_json().encode("utf-8")
