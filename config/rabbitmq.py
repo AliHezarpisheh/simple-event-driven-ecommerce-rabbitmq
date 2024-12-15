@@ -223,3 +223,26 @@ class AsyncRabbitmqManager:
             The routing key to use for binding (default is an empty string).
         """
         await queue.bind(exchange=exchange, routing_key=routing_key)
+
+    @staticmethod
+    async def set_qos(
+        *, channel: AbstractChannel, prefetch_count: int, prefetch_size: int = 0
+    ) -> None:
+        """
+        Set QoS settings for the channel.
+
+        Configures the number of messages or the maximum message size to be sent to a
+        consumer before an acknowledgment is required.
+
+        Parameters
+        ----------
+        channel : AbstractChannel
+            The channel to configure.
+        prefetch_count : int
+            The number of messages to send before waiting for an acknowledgment.
+        prefetch_size : int, optional
+            The maximum size (in bytes) of messages to send. Default is 0 (unlimited).
+        """
+        await channel.set_qos(
+            prefetch_count=prefetch_count, prefetch_size=prefetch_size
+        )
