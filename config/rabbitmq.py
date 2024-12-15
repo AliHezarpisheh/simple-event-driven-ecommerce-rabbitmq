@@ -1,24 +1,78 @@
 """Module holding RabbitMQ management components."""
 
+from typing import Any
+
 from aio_pika import ExchangeType, connect_robust
 from aio_pika.abc import (
-    AbstractRobustChannel,
-    AbstractRobustConnection,
-    AbstractRobustExchange,
-    AbstractRobustQueue,
+    AbstractChannel,
+    AbstractConnection,
+    AbstractExchange,
+    AbstractQueue,
 )
 
 
 class AsyncRabbitmqManager:
-    """Async rabbitmq manager class."""
+    """
+    Async RabbitMQ manager class.
+
+    This class provides utility methods for working with RabbitMQ in an asynchronous
+    context. It facilitates the creation of connections, channels, exchanges, queues,
+    and binding queues to exchanges, following RabbitMQ best practices.
+
+    Proper lifecycle management is crucial when using this class. Connections must be
+    opened and closed appropriately to avoid resource leaks. The example below
+    demonstrates how to use the `AsyncRabbitmqManager` to consume messages
+    while managing the connection lifecycle.
+
+    Example
+    -------
+    ```python
+    import asyncio
+    from aio_pika.abc import AbstractIncomingMessage
+    from aio_pika import ExchangeType
+
+    async def process_message(message: AbstractIncomingMessage) -> None:
+        async with message.process():
+            print(f"Received: {message.body.decode()}")
+
+    async def main():
+        manager = AsyncRabbitmqManager("amqp://guest:guest@localhost/")
+
+        # Manage connection lifecycle
+        async with await manager.get_connection() as connection:
+            channel = await manager.get_channel(connection)
+            await channel.set_qos(prefetch_count=1)
+
+            # Declare exchange and queue
+            exchange = await manager.declare_exchange(
+                channel=channel,
+                name="my_exchange",
+                exchange_type=ExchangeType.DIRECT,
+            )
+
+            queue = await manager.declare_queue(
+                channel=channel,
+                name="my_queue",
+            )
+
+            # Bind queue to exchange
+            await manager.bind_queue(exchange=exchange, queue=queue, routing_key="test")
+
+            print("Waiting for messages...")
+            # Start consuming messages
+            await queue.consume(process_message)
+            await asyncio.Future()  # Keep the program running
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
+    """
 
     def __init__(self, amqp_url: str) -> None:
         """Initialize an `AsyncRabbitmqManager` object."""
         self._amqp_url = amqp_url
-        self._connection: AbstractRobustConnection | None = None
-        self._channel: AbstractRobustChannel | None = None
 
-    async def get_connection(self) -> AbstractRobustConnection:
+    async def get_connection(self) -> AbstractConnection:
         """
         Get a connection to RabbitMQ.
 
@@ -27,40 +81,44 @@ class AsyncRabbitmqManager:
 
         Returns
         -------
-        AbstractRobustConnection
+        AbstractConnection
             The connection to the RabbitMQ server.
         """
-        if not self._connection:
-            self._connection = await connect_robust(self._amqp_url)
-        return self._connection
+        return await connect_robust(url=self._amqp_url)
 
-    async def get_channel(self) -> AbstractRobustChannel:
+    @staticmethod
+    async def get_channel(
+        connection: AbstractConnection,
+    ) -> AbstractChannel:
         """
         Get a channel from the RabbitMQ connection.
 
-        Establishes a channel if one does not exist and returns it. The channel
-        is used for performing RabbitMQ operations.
+        Establishes a channel from the given connection. The channel should be used for
+        performing RabbitMQ operations.
+
+        Parameters
+        ----------
+        connection : AbstractConnection
+            The connection object, used to create a channel.
 
         Returns
         -------
-        AbstractRobustChannel
+        AbstractChannel
             The channel for interacting with RabbitMQ.
         """
-        connection = await self.get_connection()
+        channel = await connection.channel()
+        return channel
 
-        if not self._channel:
-            self._channel = await connection.channel()
-
-        return self._channel
-
+    @staticmethod
     async def declare_exchange(
-        self,
-        name: str,
         *,
+        channel: AbstractChannel,
+        name: str,
         exchange_type: ExchangeType = ExchangeType.DIRECT,
         durable: bool = True,
         auto_delete: bool = False,
-    ) -> AbstractRobustExchange:
+        arguments: dict[str, Any] | None = None,
+    ) -> AbstractExchange:
         """
         Declare an exchange on RabbitMQ.
 
@@ -68,6 +126,8 @@ class AsyncRabbitmqManager:
 
         Parameters
         ----------
+        channel : AbstractChannel
+            The channel connected to RabbitMQ used to declare the exchange.
         name : str
             The name of the exchange to declare.
         exchange_type : ExchangeType, optional
@@ -77,27 +137,33 @@ class AsyncRabbitmqManager:
         auto_delete : bool, optional
             Whether the exchange should be deleted when no consumers are connected
             (default is False).
+        arguments: dict[str, Any], optional
+            The arguments for the exchange (default is None).
 
         Returns
         -------
-        AbstractRobustExchange
+        AbstractExchange
             The declared exchange.
         """
-        channel = await self.get_channel()
         exchange = await channel.declare_exchange(
-            name=name, type=exchange_type, durable=durable, auto_delete=auto_delete
+            name=name,
+            type=exchange_type,
+            durable=durable,
+            auto_delete=auto_delete,
+            arguments=arguments,
         )
         return exchange
 
+    @staticmethod
     async def declare_queue(
-        self,
-        name: str | None = None,
         *,
+        channel: AbstractChannel,
+        name: str | None = None,
         durable: bool = True,
         auto_delete: bool = False,
         exclusive: bool = False,
-        dead_letter_exchange: str | None = None,
-    ) -> AbstractRobustQueue:
+        arguments: dict[str, Any] | None = None,
+    ) -> AbstractQueue:
         """
         Declare a queue on RabbitMQ.
 
@@ -105,6 +171,8 @@ class AsyncRabbitmqManager:
 
         Parameters
         ----------
+        channel : AbstractChannel
+            The channel connected to RabbitMQ used to declare the exchange.
         name : str, optional
             The name of the queue to declare. If the name set to None, the server will
             generate a random name for the queue. (default is None)
@@ -116,20 +184,14 @@ class AsyncRabbitmqManager:
         exclusive: bool, optional
             Wether the queues should exclusive to the created connection or not.
             (default is False)
-        dead_letter_exchange : str, optional
-            The name of the dead letter exchange to use for the queue (default is None).
+        arguments: dict[str, Any], optional
+            The arguments for the exchange (default is None).
 
         Returns
         -------
-        AbstractRobustQueue
+        AbstractQueue
             The declared queue.
         """
-        channel = await self.get_channel()
-        arguments = (
-            {"x-dead-letter-exchange": dead_letter_exchange}
-            if dead_letter_exchange
-            else {}
-        )
         queue = await channel.declare_queue(
             name=name,
             durable=durable,
@@ -139,11 +201,11 @@ class AsyncRabbitmqManager:
         )
         return queue
 
+    @staticmethod
     async def bind_queue(
-        self,
         *,
-        exchange: AbstractRobustExchange,
-        queue: AbstractRobustQueue,
+        exchange: AbstractExchange,
+        queue: AbstractQueue,
         routing_key: str = "",
     ) -> None:
         """
@@ -153,22 +215,11 @@ class AsyncRabbitmqManager:
 
         Parameters
         ----------
-        exchange : AbstractRobustExchange
+        exchange : AbstractExchange
             The exchange to bind the queue to.
-        queue : AbstractRobustQueue
+        queue : AbstractQueue
             The queue to bind.
         routing_key : str, optional
             The routing key to use for binding (default is an empty string).
         """
         await queue.bind(exchange=exchange, routing_key=routing_key)
-
-    async def close(self) -> None:
-        """
-        Close the RabbitMQ connection and channel.
-
-        Closes the active RabbitMQ connection and channel, if they are open.
-        """
-        if self._channel and not self._channel.is_closed:
-            await self._channel.close()
-        if self._connection and not self._connection.is_closed:
-            await self._connection.close()
