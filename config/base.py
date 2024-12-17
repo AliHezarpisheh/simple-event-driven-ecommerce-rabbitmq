@@ -8,7 +8,9 @@ from .settings import Settings
 logger = LoggingConfig().get_logger()
 
 # Settings
-settings = Settings()  # type: ignore
+settings = Settings()
 
 # RabbitMQ
 rabbitmq_manager = AsyncRabbitmqManager(amqp_url=settings.AMQP_URL)
+
+__all__ = ["AsyncRabbitmqManager"]
