@@ -1,11 +1,13 @@
 """Handles the publishing of new order messages to a RabbitMQ exchange."""
 
+import asyncio
+from decimal import Decimal
+
 from aio_pika import DeliveryMode, ExchangeType, Message
 from aio_pika.abc import AbstractChannel, AbstractExchange
 
 from app.consts import ORDER_EXCHANGE_NAME
-from config.base import logger
-from config.rabbitmq import AsyncRabbitmqManager
+from config.base import AsyncRabbitmqManager, logger, rabbitmq_manager
 
 from .schemas import Order
 
@@ -79,3 +81,14 @@ class OrderProducer:
             The routing key for new orders, typically 'orders.new'.
         """
         return "orders.new"
+
+
+if __name__ == "__main__":
+    order = Order(
+        customer_id=12,
+        items=["fruits", "vegetables"],
+        total_price=Decimal(120),
+        status="created",
+    )
+    order_producer = OrderProducer(rabbitmq_manager=rabbitmq_manager)
+    asyncio.run(order_producer.produce_order(order=order))
