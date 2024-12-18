@@ -44,7 +44,7 @@ class OrderProducer:
             logger.info(
                 "Published order to the %s exchange with the result: %s",
                 ORDER_EXCHANGE_NAME,
-                publish_result.name,
+                publish_result,
             )
 
     async def declare_order_exchange(
@@ -84,7 +84,7 @@ class OrderProducer:
 
 
 if __name__ == "__main__":
-    order = OutgoingOrder(
+    order = OutgoingOrder(  # type: ignore
         customer_id=12,
         items=["fruits", "vegetables"],
         total_price=Decimal(120),
