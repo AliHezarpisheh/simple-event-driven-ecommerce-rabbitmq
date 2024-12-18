@@ -1,11 +1,13 @@
 """Handles the consuming of new order messages from a RabbitMQ queue."""
 
 import asyncio
+import json
 
 from aio_pika import ExchangeType
 from aio_pika.abc import AbstractChannel, AbstractExchange, AbstractIncomingMessage
 
 from app.consts import ORDER_EXCHANGE_NAME, ORDER_QUEUE_NAME
+from app.order_service.schemas import IncomingOrder
 from config.base import AsyncRabbitmqManager, rabbitmq_manager
 
 
@@ -16,7 +18,7 @@ class OrderConsumer:
         """Initialize an `OrderConsumer` object."""
         self.rabbitmq_manager = rabbitmq_manager
 
-    async def consume_order(self) -> None:
+    async def consume_new_order(self) -> None:
         """
         Consume new order messages from the RabbitMQ queue.
 
@@ -54,7 +56,8 @@ class OrderConsumer:
             The message received from the RabbitMQ queue to be processed.
         """
         async with message.process():
-            print(message.body.decode())
+            order = IncomingOrder(**json.loads(message.body.decode()))
+            print(order)
 
     async def declare_order_exchange(
         self, channel: AbstractChannel
@@ -94,4 +97,4 @@ class OrderConsumer:
 
 if __name__ == "__main__":
     order_consumer = OrderConsumer(rabbitmq_manager=rabbitmq_manager)
-    asyncio.run(order_consumer.consume_order())
+    asyncio.run(order_consumer.consume_new_order())

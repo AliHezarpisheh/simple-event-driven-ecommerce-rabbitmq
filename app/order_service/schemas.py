@@ -18,13 +18,13 @@ def is_decimal_positive(number: Decimal) -> Decimal:
     return number
 
 
-class Order(BaseSchema, TimestampMixin):
-    """Pydantic schema, modeling an Order in the system."""
+class OutgoingOrder(BaseSchema, TimestampMixin):
+    """Pydantic schema, modeling an outgoing order in the system."""
 
     order_id: Annotated[
         uuid.UUID,
         Field(
-            description="Unique identifier of the order.",
+            description="Unique identifier of the order",
             default_factory=lambda: uuid.uuid4(),
         ),
     ]
@@ -36,3 +36,26 @@ class Order(BaseSchema, TimestampMixin):
         AfterValidator(is_decimal_positive),
     ]
     status: Annotated[ORDER_STATUS, Field(description="The current state of the order")]
+
+
+class IncomingOrder(BaseSchema):
+    """Pydantic schema, modeling an incoming order in the system."""
+
+    order_id: Annotated[
+        str,
+        Field(description="Unique identifier of the order (in string)"),
+    ]
+    customer_id: Annotated[int, Field(description="Unique identifier of the customer")]
+    items: Annotated[list[str], Field(description="List of items in strings")]
+    total_price: Annotated[
+        str,
+        Field(description="Total price of the order (in string)"),
+    ]
+    status: Annotated[str, Field(description="The current state of the order")]
+    created_at: Annotated[
+        str,
+        Field(
+            description="The datetime (in string) that the payment is created",
+            frozen=True,
+        ),
+    ]

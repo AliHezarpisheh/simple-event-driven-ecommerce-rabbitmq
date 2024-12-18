@@ -9,7 +9,7 @@ from aio_pika.abc import AbstractChannel, AbstractExchange
 from app.consts import ORDER_EXCHANGE_NAME
 from config.base import AsyncRabbitmqManager, logger, rabbitmq_manager
 
-from .schemas import Order
+from .schemas import OutgoingOrder
 
 
 class OrderProducer:
@@ -19,7 +19,7 @@ class OrderProducer:
         """Initialize an `OrderProduce` object."""
         self.rabbitmq_manager = rabbitmq_manager
 
-    async def produce_order(self, order: Order) -> None:
+    async def produce_new_order(self, order: OutgoingOrder) -> None:
         """
         Publish an order message to a RabbitMQ exchange.
 
@@ -42,9 +42,9 @@ class OrderProducer:
                 message=message, routing_key=self._get_new_order_routing_key()
             )
             logger.info(
-                "Published order to the %s exchange with the body: %s",
+                "Published order to the %s exchange with the result: %s",
                 ORDER_EXCHANGE_NAME,
-                publish_result.body.decode(),  # type: ignore
+                publish_result.name,
             )
 
     async def declare_order_exchange(
@@ -84,11 +84,11 @@ class OrderProducer:
 
 
 if __name__ == "__main__":
-    order = Order(
+    order = OutgoingOrder(
         customer_id=12,
         items=["fruits", "vegetables"],
         total_price=Decimal(120),
         status="created",
     )
     order_producer = OrderProducer(rabbitmq_manager=rabbitmq_manager)
-    asyncio.run(order_producer.produce_order(order=order))
+    asyncio.run(order_producer.produce_new_order(order=order))
