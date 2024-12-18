@@ -8,8 +8,8 @@ from pydantic import Field
 from toolkit.schemas import BaseSchema, TimestampMixin
 
 
-class Payment(BaseSchema, TimestampMixin):
-    """Pydantic schema, modeling a Payment in the system."""
+class OutgoingPayment(BaseSchema, TimestampMixin):
+    """Pydantic schema, modeling an outgoing payment in the system."""
 
     payment_id: Annotated[
         uuid.UUID,
@@ -18,9 +18,7 @@ class Payment(BaseSchema, TimestampMixin):
             default_factory=lambda: uuid.uuid4(),
         ),
     ]
-    order_id: Annotated[
-        uuid.UUID, Field(description="The unique identifier of the order")
-    ]
+    order_id: Annotated[str, Field(description="The unique identifier of the order")]
     status: Annotated[
         Literal["success", "failed"], Field(description="The state of the payment")
     ]
