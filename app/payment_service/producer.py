@@ -1,25 +1,20 @@
 """Module handles the publishing of new payment messages to a RabbitMQ exchange."""
 
 import asyncio
-from decimal import Decimal
 
 from aio_pika import DeliveryMode, Message
 
 from app.order_service.consumer import OrderConsumer
 from app.order_service.producer import OrderProducer
-from app.order_service.schemas import IncomingOrder, OutgoingOrder
+from app.order_service.schemas import IncomingOrder
 from app.payment_service.pubsub import PaymentPubSub
 from app.payment_service.schemas import OutgoingPayment
 from app.payment_service.utils import is_order_payment_success
-from config.base import AsyncRabbitmqManager, rabbitmq_manager
+from config.base import rabbitmq_manager
 
 
 class PaymentProducer(PaymentPubSub):
     """Produce and publish payment messages to a RabbitMQ exchange."""
-
-    def __init__(self, rabbitmq_manager: AsyncRabbitmqManager) -> None:
-        """Instantiate a `PaymentProducer` object."""
-        super().__init__(rabbitmq_manager)
 
     async def produce_payments(self, order: IncomingOrder) -> None:
         """
@@ -98,12 +93,6 @@ class PaymentProducer(PaymentPubSub):
 
 
 if __name__ == "__main__":
-    order = OutgoingOrder(  # type: ignore
-        customer_id=12,
-        items=["fruits", "vegetables"],
-        total_price=Decimal(120),
-        status="created",
-    )
     order_producer = OrderProducer(rabbitmq_manager=rabbitmq_manager)
     order_consumer = OrderConsumer(rabbitmq_manager=rabbitmq_manager)
     payment_producer = PaymentProducer(rabbitmq_manager=rabbitmq_manager)

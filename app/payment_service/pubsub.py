@@ -1,4 +1,4 @@
-"""Module contains a subclass for payment producers and consumers."""
+"""Module contains a superclass for payment producers and consumers."""
 
 from aio_pika import ExchangeType
 from aio_pika.abc import AbstractChannel, AbstractExchange, AbstractQueue
