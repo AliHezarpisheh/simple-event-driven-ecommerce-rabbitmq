@@ -1,4 +1,4 @@
-"""Module contains a subclass for order producers and consumers."""
+"""Module contains a superclass for order producers and consumers."""
 
 from aio_pika import ExchangeType
 from aio_pika.abc import AbstractChannel, AbstractExchange

@@ -10,7 +10,7 @@ from aio_pika.abc import AbstractIncomingMessage
 from app.consts import ORDERS_QUEUE_NAME
 from app.order_service.pubsub import OrderPubSub
 from app.order_service.schemas import IncomingOrder
-from config.base import AsyncRabbitmqManager, rabbitmq_manager
+from config.base import rabbitmq_manager
 
 OrderMessageHandler = (
     Callable[[IncomingOrder], None] | Callable[[IncomingOrder], Awaitable[None]]
@@ -20,11 +20,9 @@ OrderMessageHandler = (
 class OrderConsumer(OrderPubSub):
     """Consume and receive new order messages from a RabbitMQ queue."""
 
-    def __init__(self, rabbitmq_manager: AsyncRabbitmqManager) -> None:
-        """Initialize an `OrderConsumer` object."""
-        self.rabbitmq_manager = rabbitmq_manager
-
-    async def consume_new_order(self, on_message_func: OrderMessageHandler = print) -> None:
+    async def consume_new_order(
+        self, on_message_func: OrderMessageHandler = print
+    ) -> None:
         """
         Consume new order messages from the RabbitMQ queue.
 
