@@ -14,7 +14,7 @@ ORDER_STATUS = Literal["created", "pending", "canceled", "failed"]
 def is_decimal_positive(number: Decimal) -> Decimal:
     """Check that the given number is positive or not. If not, raise `ValueError`."""
     if number <= 0:
-        raise ValueError("The number be positive")
+        raise ValueError("The number should be positive")
     return number
 
 
