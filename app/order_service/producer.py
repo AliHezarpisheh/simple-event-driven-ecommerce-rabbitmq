@@ -1,13 +1,10 @@
 """Module handles the publishing of new order messages to a RabbitMQ exchange."""
 
-import asyncio
-from decimal import Decimal
-
 from aio_pika import DeliveryMode, Message
 
 from app.consts import ORDERS_EXCHANGE_NAME
 from app.order_service.pubsub import OrderPubSub
-from config.base import logger, rabbitmq_manager
+from config.base import logger
 
 from .schemas import OutgoingOrder
 
@@ -26,7 +23,7 @@ class OrderProducer(OrderPubSub):
         """
         async with await self.rabbitmq_manager.get_connection() as connection:
             logger.info("Opening connection and channel to publish order...")
-            channel = await self.rabbitmq_manager.get_channel(connection)
+            channel = await self.rabbitmq_manager.get_channel(connection=connection)
 
             order_exchange = await self.declare_order_exchange(channel=channel)
 
@@ -42,14 +39,3 @@ class OrderProducer(OrderPubSub):
                 ORDERS_EXCHANGE_NAME,
                 publish_result,
             )
-
-
-if __name__ == "__main__":
-    order = OutgoingOrder(  # type: ignore
-        customer_id=12,
-        items=["fruits", "vegetables"],
-        total_price=Decimal(120),
-        status="created",
-    )
-    order_producer = OrderProducer(rabbitmq_manager=rabbitmq_manager)
-    asyncio.run(order_producer.produce_new_order(order=order))

@@ -10,7 +10,6 @@ from aio_pika.abc import AbstractIncomingMessage
 from app.consts import ORDERS_QUEUE_NAME
 from app.order_service.pubsub import OrderPubSub
 from app.order_service.schemas import IncomingOrder
-from config.base import rabbitmq_manager
 
 OrderMessageHandler = (
     Callable[[IncomingOrder], None] | Callable[[IncomingOrder], Awaitable[None]]
@@ -32,7 +31,7 @@ class OrderConsumer(OrderPubSub):
         incoming messages by calling the `on_new_order_message` method.
         """
         async with await self.rabbitmq_manager.get_connection() as connection:
-            channel = await self.rabbitmq_manager.get_channel(connection)
+            channel = await self.rabbitmq_manager.get_channel(connection=connection)
             await self.rabbitmq_manager.set_qos(channel=channel, prefetch_count=100)
 
             order_exchange = await self.declare_order_exchange(channel=channel)
@@ -47,7 +46,7 @@ class OrderConsumer(OrderPubSub):
 
             async def wrapped_on_message(message: AbstractIncomingMessage) -> None:
                 """Wrap `on_new_order_message` to apply `on_message_func`."""
-                await self.on_new_order_message(
+                await self.on_new_order_message(  #  pragma: no cover
                     message=message, on_message_func=on_message_func
                 )
 
@@ -79,8 +78,3 @@ class OrderConsumer(OrderPubSub):
                 await on_message_func(order)
             else:
                 on_message_func(order)
-
-
-if __name__ == "__main__":
-    order_consumer = OrderConsumer(rabbitmq_manager=rabbitmq_manager)
-    asyncio.run(order_consumer.consume_new_order())
