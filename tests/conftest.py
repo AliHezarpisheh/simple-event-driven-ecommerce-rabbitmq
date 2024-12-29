@@ -26,7 +26,7 @@ def incoming_order() -> IncomingOrder:
 def outgoing_order() -> OutgoingOrder:
     """Return an `OutgoingOrder` instance, used in tests."""
     return OutgoingOrder(
-        customer_id="12e9510c-5201-4039-a18d-81c9219cb44d",
+        customer_id=1,
         items=["Iphone11", "Asus Vivobook"],
         total_price=Decimal(1999.25),
         status="created",
