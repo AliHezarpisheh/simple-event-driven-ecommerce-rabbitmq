@@ -1,16 +1,11 @@
 """Module handles the publishing of new payment messages to a RabbitMQ exchange."""
 
-import asyncio
-
 from aio_pika import DeliveryMode, Message
 
-from app.order_service.consumer import OrderConsumer
-from app.order_service.producer import OrderProducer
 from app.order_service.schemas import IncomingOrder
 from app.payment_service.pubsub import PaymentPubSub
 from app.payment_service.schemas import OutgoingPayment
 from app.payment_service.utils import is_order_payment_success
-from config.base import rabbitmq_manager
 
 
 class PaymentProducer(PaymentPubSub):
@@ -90,14 +85,3 @@ class PaymentProducer(PaymentPubSub):
             if is_payment_success
             else self._get_failed_payment_routing_key()
         )
-
-
-if __name__ == "__main__":
-    order_producer = OrderProducer(rabbitmq_manager=rabbitmq_manager)
-    order_consumer = OrderConsumer(rabbitmq_manager=rabbitmq_manager)
-    payment_producer = PaymentProducer(rabbitmq_manager=rabbitmq_manager)
-    asyncio.run(
-        order_consumer.consume_new_order(
-            on_message_func=payment_producer.produce_payments
-        )
-    )
