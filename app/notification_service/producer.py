@@ -1,6 +1,5 @@
 """Module handles the publishing of notification messages to a RabbitMQ exchange."""
 
-import asyncio
 import random
 from typing import get_args
 
@@ -8,9 +7,8 @@ from aio_pika import DeliveryMode, Message
 
 from app.notification_service.pubsub import NotificationPubSub
 from app.notification_service.schemas import Notification, NotificationType
-from app.payment_service.consumer import PaymentConsumer
 from app.payment_service.schemas import IncomingPayment
-from config.base import logger, rabbitmq_manager
+from config.base import logger
 
 
 class NotificationProducer(NotificationPubSub):
@@ -68,13 +66,3 @@ class NotificationProducer(NotificationPubSub):
             ),
         )
         return notification
-
-
-if __name__ == "__main__":
-    payment_consumer = PaymentConsumer(rabbitmq_manager=rabbitmq_manager)
-    notification_producer = NotificationProducer(rabbitmq_manager=rabbitmq_manager)
-    asyncio.run(
-        payment_consumer.consume_payments(
-            on_message_func=notification_producer.produce_notifications
-        )
-    )
