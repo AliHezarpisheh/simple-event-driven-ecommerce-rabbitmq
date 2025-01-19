@@ -1,0 +1,40 @@
+# These settings and configurations are consistent across different environments.
+# Inconsistent and secret settings and configurations should be placed in the .env files,
+# using the .env.example files.
+
+# Logging configuration.
+[logging]
+version = 1
+disable_existing_loggers = false
+
+[logging.formatters.coloredFormatter]
+"()" = "coloredlogs.ColoredFormatter"
+format = "%(asctime)s - %(levelname)s - %(name)s - %(relativepath)s:%(lineno)d - %(message)s"
+datefmt = "%Y-%m-%d %H:%M:%S"
+
+[logging.formatters.fileFormatter]
+format = "%(asctime)s - %(levelname)s - %(name)s - %(relativepath)s:%(lineno)d - %(message)s"
+datefmt = "%Y-%m-%d %H:%M:%S"
+
+[logging.handlers.consoleHandler]
+level = "DEBUG"
+class = "logging.StreamHandler"
+formatter = "coloredFormatter"
+
+[logging.handlers.fileHandler]
+level = "INFO"
+class = "logging.handlers.RotatingFileHandler"
+filename = "logs/ecommerce.log"
+maxBytes = 1048576   # 1 MB
+backupCount = 10
+formatter = "fileFormatter"
+
+[logging.loggers.development]
+level = "DEBUG"
+handlers = ["consoleHandler", "fileHandler"]
+propagate = true
+
+[logging.loggers.production]
+level = "INFO"
+handlers = ["fileHandler"]
+propagate = true

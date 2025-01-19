@@ -1,14 +1,19 @@
 [tool.poetry]
 name = "simple-event-driven-ecommerce-rabbitmq"
 version = "0.1.0"
-description = ""
+description = "A simple event-driven e-commerce application, implemented using rabbitmq(aio-pika), for learning purposes."
 authors = ["alihezarpisheh <alihezarpisheh@outlook.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "3.13"
+python = "^3.13"
 aio-pika = "^9.5.3"
+coloredlogs = "^15.0.1"
+tomlkit = "^0.13.2"
+pydantic-settings = "^2.7.0"
+pydantic = "^2.10.3"
 
 
 [tool.poetry.group.test.dependencies]
@@ -16,6 +21,7 @@ pytest = "^8.3.4"
 pytest-cov = "^6.0.0"
 pytest-randomly = "^3.16.0"
 tox = "^4.23.2"
+pytest-asyncio = "^0.25.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -67,6 +73,8 @@ ignore_missing_imports = true
 
 exclude = "tests/"
 
+plugins = ["pydantic.mypy"]
+
 
 [tool.pytest.ini_options]
 addopts = [
@@ -87,6 +95,8 @@ required_plugins = [
 
 testpaths = "tests"
 xfail_strict = true
+
+asyncio_default_fixture_loop_scope = "function"
 
 
 [tool.coverage.run]
