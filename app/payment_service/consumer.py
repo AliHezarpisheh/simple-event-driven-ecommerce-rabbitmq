@@ -52,7 +52,7 @@ class PaymentConsumer(PaymentPubSub):
 
             async def wrapped_on_message(message: AbstractIncomingMessage) -> None:
                 """Wrap `on_payment_message` to apply `on_message_func`."""
-                await self.on_payment_message(
+                await self.on_payment_message(  # pragma: no cover
                     on_message_func=on_message_func, message=message
                 )
 
